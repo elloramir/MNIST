@@ -26,7 +26,7 @@ class LogisticRegressionModel {
 
     for (let epoch = 0; epoch < epochs; epoch++) {
       const { correct, total } = this.processEpoch(data, batchSize, learningRate, momentum, vWeights, vBiases);
-      this.updateStatus(`Época ${epoch + 1}: Acurácia no Treino = ${(correct / total * 100).toFixed(2)}%`);
+      this.updateStatus(`Epoch ${epoch + 1}: Accurate = ${(correct / total * 100).toFixed(2)}%`);
     }
 
     this.trained = true;

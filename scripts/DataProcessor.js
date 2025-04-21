@@ -1,3 +1,4 @@
+export default
 class DataProcessor {
   static async loadDataset(trainPath, testPath) {
     const [train, test] = await Promise.all([

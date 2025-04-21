@@ -1,43 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>MNIST Classifier</title>
-	<link rel="stylesheet" type="text/css" href="index.css">
+  <meta charset="UTF-8">
+  <title>MNIST Classifier</title>
+  <link rel="stylesheet" type="text/css" href="index.css">
 </head>
 <body>
-	<h1>MNIST Classifier</h1>
+  <main class="container">
+    <!-- Training Panel -->
+    <section class="panel train">
+      <h2>Train Model</h2>
+      <button id="trainBtn">Train Model</button>
+      <button id="downloadBtn" disabled>Download Weights</button>
 
-	<div class="main-layout">
-		<!-- Left Panel: Training -->
-		<div class="panel">
-			<h2>Train Model</h2>
-			<button id="trainBtn">Train Model</button>
-			<button id="downloadBtn" disabled>Download Weights</button>
+      <h2>Load Weights</h2>
+      <input type="file" id="weightsFile" accept=".json">
+      <button id="loadBtn" disabled>Load Weights</button>
 
-			<h2 style="margin-top: 30px;">Load Weights</h2>
-			<input type="file" id="weightsFile" accept=".json">
-			<button id="loadBtn" disabled>Load Weights</button>
+      <div id="status">Ready to train the model...</div>
+    </section>
 
-			<div id="status">Ready to train the model...</div>
-			<div id="results"></div>
-		</div>
+    <!-- Test Panel -->
+    <section class="panel test">
+      <h2>Test the Model</h2>
+      <div class="canvas-container">
+        <div class="controls">
+          <button id="predictBtn" disabled>🔮 Predict</button>
+          <button id="clearBtn">🧹 Clear</button>
+        </div>
+        <canvas id="drawingCanvas" width="280" height="280"></canvas>
+        <div id="predictionResult"></div>
+      </div>
+    </section>
+  </main>
 
-		<!-- Right Panel: Test with Canvas -->
-		<div class="panel">
-			<h2>Test the Model</h2>
-			<div class="canvas-container">
-				<canvas id="drawingCanvas" width="280" height="280"></canvas>
-				<div class="controls">
-					<button id="predictBtn" disabled>Predict Digit</button>
-					<button id="clearBtn">Clear</button>
-				</div>
-				<div id="predictionResult"></div>
-			</div>
-		</div>
-	</div>
-
-	<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-	<script type="module" src="scripts/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script type="module" src="scripts/main.js"></script>
 </body>
 </html>

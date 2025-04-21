@@ -1,6 +1,7 @@
 import LogisticRegressionModel from "./LogisticRegressionModel.js"
 import DrawingCanvas from "./DrawingCanvas.js"
 import ModelPersistence from "./ModelPersistence.js"
+import DataProcessor from "./DataProcessor.js"
  
 export default
 class MNISTViewController {
@@ -22,7 +23,7 @@ class MNISTViewController {
     
     this.model.updateStatus = this.updateStatus.bind(this);
     this.setupEventListeners();
-    this.updateStatus("Pronto para treinar o modelo ou carregar pesos existentes.");
+    this.updateStatus("Ready to train or load existent weights");
   }
 
   setupEventListeners() {
@@ -48,12 +49,10 @@ class MNISTViewController {
       const { weights, biases } = this.model.train(flatTrain);
       const accuracy = this.model.evaluate(flatTest) * 100;
       
-      this.uiElements.resultsDiv.textContent = 
-        `Modelo treinado com sucesso! Acurácia no teste: ${accuracy.toFixed(2)}%`;
       this.uiElements.downloadBtn.disabled = false;
       this.uiElements.predictBtn.disabled = false;
     } catch (error) {
-      this.updateStatus("Erro durante o treinamento: " + error.message);
+      this.updateStatus("Error while training: " + error.message);
       } finally {
         this.setButtonState(false);
       }
@@ -63,14 +62,14 @@ class MNISTViewController {
     if (!this.model.trained) return;
     
     ModelPersistence.downloadWeights(this.model.weights, this.model.biases);
-    this.updateStatus("Pesos do modelo baixados com sucesso!");
+    this.updateStatus("Weights downloaded!");
   }
 
   async handleLoadClick() {
     if (!this.uiElements.weightsFile.files.length) return;
     
     this.uiElements.loadBtn.disabled = true;
-    this.updateStatus("Carregando pesos do modelo...");
+    this.updateStatus("Loading weights...");
     
     try {
       const modelData = await ModelPersistence.loadWeightsFromFile(this.uiElements.weightsFile.files[0]);
@@ -78,11 +77,10 @@ class MNISTViewController {
       this.model.biases = modelData.biases;
       this.model.trained = true;
       
-      this.updateStatus("Pesos do modelo carregados com sucesso!");
-      this.uiElements.resultsDiv.textContent = "Modelo pronto para inferência!";
+      this.updateStatus("Weights loadedes!");
       this.uiElements.predictBtn.disabled = false;
     } catch (error) {
-      this.updateStatus("Erro ao carregar pesos: " + error.message);
+      this.updateStatus("Error at loading weights: " + error.message);
     } finally {
       this.uiElements.loadBtn.disabled = false;
     }
@@ -90,14 +88,14 @@ class MNISTViewController {
 
   handlePredictClick() {
     if (!this.model.trained) {
-      this.uiElements.predictionResult.textContent = "Modelo não treinado ou carregado ainda.";
+      this.uiElements.predictionResult.textContent = "Model not trained or loaded yeat";
       return;
     }
     
     const pixelArray = this.drawingCanvas.getProcessedImage();
     const { predicted, probs } = this.model.predict(pixelArray);
     
-    let resultHTML = `<h3>Predição: ${predicted}</h3><h4>Probabilidades:</h4><ul>`;
+    let resultHTML = `<h3>Predictions: ${predicted}</h3><h4>Probalities:</h4><ul>`;
     probs.forEach((prob, i) => {
       resultHTML += `<li>${i}: ${(prob * 100).toFixed(2)}%</li>`;
     });
