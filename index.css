@@ -1,0 +1,129 @@
+:root {
+	--primary: #00BCD4;
+	--secondary: #1DE9B6;
+	--bg: #121212;
+	--surface: #1E1E1E;
+	--text: #E0E0E0;
+	--accent: #FF9800;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Segoe UI', sans-serif;
+	background-color: var(--bg);
+	color: var(--text);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+}
+
+h1 {
+	margin: 30px 0;
+	font-size: 2.5rem;
+	color: var(--primary);
+}
+
+.main-layout {
+	display: flex;
+	flex-direction: row;
+	gap: 30px;
+	width: 95%;
+	max-width: 1200px;
+	padding: 20px;
+}
+
+.panel {
+	flex: 1;
+	background-color: var(--surface);
+	border-radius: 12px;
+	padding: 25px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+}
+
+.panel h2 {
+	color: var(--secondary);
+	font-size: 1.5rem;
+	margin-bottom: 15px;
+}
+
+button {
+	padding: 10px 16px;
+	margin: 8px 5px 0 0;
+	background: var(--primary);
+	color: white;
+	border: none;
+	border-radius: 6px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background 0.3s;
+}
+
+button:hover:not(:disabled) {
+	background: var(--secondary);
+}
+
+button:disabled {
+	background: #444;
+	cursor: not-allowed;
+}
+
+input[type="file"] {
+	margin-top: 10px;
+	color: var(--text);
+}
+
+#status, #results {
+	background-color: #2a2a2a;
+	border-left: 4px solid var(--accent);
+	padding: 10px;
+	border-radius: 6px;
+	margin: 15px 0;
+	font-size: 0.95rem;
+}
+
+.canvas-container {
+	margin-top: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+#drawingCanvas {
+	border: 2px dashed var(--secondary);
+	background-color: black;
+	width: 280px;
+	height: 280px;
+	border-radius: 12px;
+}
+
+.controls {
+	margin-top: 15px;
+	display: flex;
+	gap: 10px;
+}
+
+#predictionResult {
+	margin-top: 15px;
+	font-size: 1.2rem;
+	color: var(--accent);
+}
+
+@media (max-width: 900px) {
+	.main-layout {
+		flex-direction: column;
+	}
+
+	#drawingCanvas {
+		width: 240px;
+		height: 240px;
+	}
+}
