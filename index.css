@@ -1,6 +1,6 @@
 :root {
-  --primary: #5C6BC0;       /* Soft pastel blue */
-  --secondary: #FFAB91;     /* Soft coral */
+  --primary: #8e735d;       /* Soft pastel blue */
+  --secondary: #d58e54;     /* Soft coral */
   --bg: #faf8f2;            /* Off-white pastel background */
   --surface: #ffffff;       /* White surface for panels */
   --text: #444444;          /* Dark text for readability */
@@ -44,7 +44,7 @@ body {
 .panel h2 {
   margin-bottom: 20px;
   padding-bottom: 5px;
-  color: var(--primary);
+  color: #6a6968;
   font-size: 1.6rem;
   border-bottom: 2px dashed var(--border-color);
 }
