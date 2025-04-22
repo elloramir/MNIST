@@ -8,5 +8,3 @@ A browser-based MNIST digit classifier built with JavaScript and logistic regres
 - [x] Fully client-side training and inference  
 - [x] Canvas-based digit drawing and preprocessing  
 - [x] Optimize model performance for training
-- [ ] Improve training and inference speed  
-- [ ] Support more complex neural network architectures
