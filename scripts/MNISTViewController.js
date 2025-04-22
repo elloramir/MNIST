@@ -46,7 +46,7 @@ class MNISTViewController {
       const flatTrain = DataProcessor.flattenDataset(train);
       const flatTest = DataProcessor.flattenDataset(test);
       
-      const { weights, biases } = this.model.train(flatTrain);
+      const { weights, biases } = await this.model.train(flatTrain);
       const accuracy = this.model.evaluate(flatTest) * 100;
       
       this.uiElements.downloadBtn.disabled = false;

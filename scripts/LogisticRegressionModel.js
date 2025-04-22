@@ -1,4 +1,4 @@
-import { softmax, shuffle } from "./utils.js"
+import { softmax, shuffle } from "./utils.js";
 
 export default
 class LogisticRegressionModel {
@@ -18,7 +18,7 @@ class LogisticRegressionModel {
     this.trained = false;
   }
 
-  train(data, epochs = 20, learningRate = 0.01, batchSize = 128, momentum = 0.9) {
+  async train(data, epochs = 20, learningRate = 0.01, batchSize = 128, momentum = 0.9) {
     if (!this.weights) this.initializeParameters();
     
     const vWeights = Array(this.numClasses).fill().map(() => Array(this.inputSize).fill(0));
@@ -27,9 +27,12 @@ class LogisticRegressionModel {
     for (let epoch = 0; epoch < epochs; epoch++) {
       const { correct, total } = this.processEpoch(data, batchSize, learningRate, momentum, vWeights, vBiases);
       this.updateStatus(`Epoch ${epoch + 1}: Accurate = ${(correct / total * 100).toFixed(2)}%`);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     this.trained = true;
+    this.updateStatus("Training done!")
     return { weights: this.weights, biases: this.biases };
   }
 
@@ -123,6 +126,6 @@ class LogisticRegressionModel {
   }
 
   updateStatus(message) {
-    // To be implemented by the view controller
+    // To be implementado pela camada de visualização
   }
 }
