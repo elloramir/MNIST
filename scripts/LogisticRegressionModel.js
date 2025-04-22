@@ -1,8 +1,7 @@
-import { softmax, shuffle } from "./utils.js";
+import { shuffle } from "./utils.js";
 
-export default
-class LogisticRegressionModel {
-  constructor(inputSize = 784, numClasses = 10) {
+export default class OptimizedLogisticRegression {
+  constructor(inputSize, numClasses) {
     this.inputSize = inputSize;
     this.numClasses = numClasses;
     this.weights = null;
@@ -10,111 +9,173 @@ class LogisticRegressionModel {
     this.trained = false;
   }
 
-  initializeParameters() {
-    this.weights = Array(this.numClasses).fill().map(() =>
-      Array(this.inputSize).fill().map(() => Math.random() * 0.01)
-    );
-    this.biases = Array(this.numClasses).fill(0);
+  initialize() {
+    this.weights = new Float32Array(this.numClasses * this.inputSize);
+    this.biases = new Float32Array(this.numClasses);
+    
+    for (let i = 0; i < this.weights.length; i++) {
+      this.weights[i] = Math.random() * 0.01;
+    }
+    
     this.trained = false;
   }
 
-  async train(data, epochs = 20, learningRate = 0.01, batchSize = 128, momentum = 0.9) {
-    if (!this.weights) this.initializeParameters();
+  softmax(scores) {
+    const max = Math.max(...scores);
+    const exps = scores.map(s => Math.exp(s - max));
+    const sum = exps.reduce((a, b) => a + b, 0);
+    return exps.map(e => e / sum);
+  }
+
+  async train(data, epochs = 20, lr = 0.01, batchSize = 128, momentum = 0.9) {
+    if (!this.weights) this.initialize();
     
-    const vWeights = Array(this.numClasses).fill().map(() => Array(this.inputSize).fill(0));
-    const vBiases = Array(this.numClasses).fill(0);
+    const processed = this.preprocess(data);
+    const velocityW = new Float32Array(this.weights.length);
+    const velocityB = new Float32Array(this.numClasses);
+    
+    const gradW = new Float32Array(this.weights.length);
+    const gradB = new Float32Array(this.numClasses);
+    const scores = new Float32Array(this.numClasses);
+    const probs = new Float32Array(this.numClasses);
+    
+    const start = performance.now();
 
     for (let epoch = 0; epoch < epochs; epoch++) {
-      const { correct, total } = this.processEpoch(data, batchSize, learningRate, momentum, vWeights, vBiases);
-      this.updateStatus(`Epoch ${epoch + 1}: Accurate = ${(correct / total * 100).toFixed(2)}%`);
-
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const { correct, total } = this.processEpoch(
+        processed, batchSize, lr, momentum, 
+        velocityW, velocityB, gradW, gradB, scores, probs
+      );
+      
+      this.updateStatus(`Epoch ${epoch + 1}: Accuracy = ${(correct / total * 100).toFixed(2)}%`);
+      await new Promise(r => setTimeout(r, 0));
     }
-
+    
     this.trained = true;
-    this.updateStatus("Training done!")
+    this.updateStatus(`Training completed in ${((performance.now() - start)/1000).toFixed(2)}s`);
     return { weights: this.weights, biases: this.biases };
   }
 
-  processEpoch(data, batchSize, learningRate, momentum, vWeights, vBiases) {
+  preprocess(data) {
+    return data.map(({ x, label }) => ({
+      x: x instanceof Float32Array ? x : new Float32Array(x),
+      label
+    }));
+  }
+
+  processEpoch(data, batchSize, lr, momentum, vW, vB, gradW, gradB, scores, probs) {
     shuffle(data);
     let correct = 0;
-    let total = 0;
 
     for (let i = 0; i < data.length; i += batchSize) {
-      const batch = data.slice(i, i + batchSize);
-      const { gradW, gradB, batchCorrect } = this.processBatch(batch);
+      const end = Math.min(i + batchSize, data.length);
+      const size = end - i;
+      
+      gradW.fill(0);
+      gradB.fill(0);
+      
+      let batchCorrect = 0;
+      
+      for (let j = i; j < end; j++) {
+        const { x, label } = data[j];
+        const { predicted } = this.forward(x, scores, probs);
+        
+        if (predicted === label) batchCorrect++;
+        this.gradients(x, label, probs, gradW, gradB);
+      }
       
       correct += batchCorrect;
-      total += batch.length;
-      
-      this.updateParameters(gradW, gradB, batch.length, learningRate, momentum, vWeights, vBiases);
+      this.update(gradW, gradB, size, lr, momentum, vW, vB);
     }
 
-    return { correct, total };
+    return { correct, total: data.length };
   }
 
-  processBatch(batch) {
-    const gradW = Array(this.numClasses).fill().map(() => Array(this.inputSize).fill(0));
-    const gradB = Array(this.numClasses).fill(0);
-    let batchCorrect = 0;
-
-    for (const sample of batch) {
-      const { x, label } = sample;
-      const { probs, predicted } = this.forwardPass(x);
-      
-      if (predicted === label) batchCorrect++;
-      
-      this.calculateGradients(x, label, probs, gradW, gradB);
+  forward(x, scores, probs) {
+    this.scores(x, scores);
+    
+    const max = Math.max(...scores);
+    let sum = 0;
+    
+    for (let c = 0; c < this.numClasses; c++) {
+      probs[c] = Math.exp(scores[c] - max);
+      sum += probs[c];
     }
-
-    return { gradW, gradB, batchCorrect };
-  }
-
-  forwardPass(x) {
-    const scores = this.calculateScores(x);
-    const probs = softmax(scores);
-    const predicted = probs.indexOf(Math.max(...probs));
+    
+    for (let c = 0; c < this.numClasses; c++) {
+      probs[c] /= sum;
+    }
+    
+    let maxProb = probs[0];
+    let predicted = 0;
+    
+    for (let c = 1; c < this.numClasses; c++) {
+      if (probs[c] > maxProb) {
+        maxProb = probs[c];
+        predicted = c;
+      }
+    }
+    
     return { probs, predicted };
   }
 
-  calculateScores(x) {
-    return this.weights.map((classWeights, c) => {
-      return classWeights.reduce((sum, weight, j) => sum + weight * x[j], this.biases[c]);
-    });
+  scores(x, scores) {
+    for (let c = 0; c < this.numClasses; c++) {
+      let sum = this.biases[c];
+      const offset = c * this.inputSize;
+      
+      let j = 0;
+      for (; j < this.inputSize - 3; j += 4) {
+        sum += this.weights[offset + j] * x[j] +
+               this.weights[offset + j + 1] * x[j + 1] +
+               this.weights[offset + j + 2] * x[j + 2] +
+               this.weights[offset + j + 3] * x[j + 3];
+      }
+      
+      for (; j < this.inputSize; j++) {
+        sum += this.weights[offset + j] * x[j];
+      }
+      
+      scores[c] = sum;
+    }
   }
 
-  calculateGradients(x, label, probs, gradW, gradB) {
+  gradients(x, label, probs, gradW, gradB) {
     for (let c = 0; c < this.numClasses; c++) {
-      const target = (c === label) ? 1 : 0;
-      const error = probs[c] - target;
+      const error = probs[c] - (c === label ? 1 : 0);
       gradB[c] += error;
       
+      const offset = c * this.inputSize;
       for (let j = 0; j < this.inputSize; j++) {
-        gradW[c][j] += error * x[j];
+        gradW[offset + j] += error * x[j];
       }
     }
   }
 
-  updateParameters(gradW, gradB, batchSize, learningRate, momentum, vWeights, vBiases) {
+  update(gradW, gradB, batchSize, lr, momentum, vW, vB) {
+    const scale = lr / batchSize;
+    
+    for (let i = 0; i < this.weights.length; i++) {
+      vW[i] = momentum * vW[i] + scale * gradW[i];
+      this.weights[i] -= vW[i];
+    }
+    
     for (let c = 0; c < this.numClasses; c++) {
-      for (let j = 0; j < this.inputSize; j++) {
-        vWeights[c][j] = momentum * vWeights[c][j] + learningRate * (gradW[c][j] / batchSize);
-        this.weights[c][j] -= vWeights[c][j];
-      }
-      
-      vBiases[c] = momentum * vBiases[c] + learningRate * (gradB[c] / batchSize);
-      this.biases[c] -= vBiases[c];
+      vB[c] = momentum * vB[c] + scale * gradB[c];
+      this.biases[c] -= vB[c];
     }
   }
 
   evaluate(data) {
     if (!this.trained) throw new Error("Model not trained");
     
+    const scores = new Float32Array(this.numClasses);
+    const probs = new Float32Array(this.numClasses);
     let correct = 0;
-    for (const sample of data) {
-      const { predicted } = this.forwardPass(sample.x);
-      if (predicted === sample.label) correct++;
+    
+    for (const { x, label } of data) {
+      const { predicted } = this.forward(x, scores, probs);
+      if (predicted === label) correct++;
     }
     
     return correct / data.length;
@@ -122,10 +183,12 @@ class LogisticRegressionModel {
 
   predict(x) {
     if (!this.trained) throw new Error("Model not trained");
-    return this.forwardPass(x);
+    const scores = new Float32Array(this.numClasses);
+    const probs = new Float32Array(this.numClasses);
+    return this.forward(x, scores, probs);
   }
 
   updateStatus(message) {
-    // To be implementado pela camada de visualização
+    console.log(message);
   }
 }
