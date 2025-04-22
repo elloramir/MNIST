@@ -6,7 +6,9 @@ import DataProcessor from "./DataProcessor.js"
 export default
 class MNISTViewController {
   constructor() {
-    this.model = null;
+    this.model = new LogisticRegressionModel(28*28, 10);
+    this.model.updateStatus = this.updateStatus.bind(this);
+
     this.drawingCanvas = new DrawingCanvas(document.getElementById('drawingCanvas'));
     
     this.uiElements = {
@@ -44,12 +46,7 @@ class MNISTViewController {
       const { train, test } = await DataProcessor.loadDataset("data/train.gz", "data/test.gz");
       const flatTrain = DataProcessor.flattenDataset(train);
       const flatTest = DataProcessor.flattenDataset(test);
-      const inputSize = train.width*train.height;
-      const numClasses = 10; // 10 digits
       
-      this.model = new LogisticRegressionModel(inputSize, numClasses);
-      this.model.updateStatus = this.updateStatus.bind(this);
-
       const { weights, biases } = await this.model.train(flatTrain);
       const accuracy = this.model.evaluate(flatTest) * 100;
       
