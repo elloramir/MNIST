@@ -18,7 +18,7 @@ class LogisticRegressionModel {
     this.trained = false;
   }
 
-  train(data, epochs = 30, learningRate = 0.01, batchSize = 128, momentum = 0.9) {
+  train(data, epochs = 20, learningRate = 0.01, batchSize = 128, momentum = 0.9) {
     if (!this.weights) this.initializeParameters();
     
     const vWeights = Array(this.numClasses).fill().map(() => Array(this.inputSize).fill(0));

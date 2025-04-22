@@ -39,7 +39,7 @@ class MNISTViewController {
 
   async handleTrainClick() {
     this.setButtonState(true);
-    this.updateStatus("Iniciando treinamento...");
+    this.updateStatus("Initializing training...");
     
     try {
       const { train, test } = await DataProcessor.loadDataset("data/train.gz", "data/test.gz");
@@ -77,7 +77,7 @@ class MNISTViewController {
       this.model.biases = modelData.biases;
       this.model.trained = true;
       
-      this.updateStatus("Weights loadedes!");
+      this.updateStatus("Weights loaded!");
       this.uiElements.predictBtn.disabled = false;
     } catch (error) {
       this.updateStatus("Error at loading weights: " + error.message);
